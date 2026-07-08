@@ -1,2 +1,78 @@
-# Tileifying-Algebra
-Tileify is an interactive algebra learning tool that lets students explore equations as movable tiles, revealing the hidden structure behind solving, factoring, fractions, powers, and branching.
+# Tileify v1.2.1 Parentheses + Denominator Fix Sandbox
+
+This build is a more user-friendly presentation of the current Tileify sandbox.
+
+## What changed
+
+- Added a cleaner classroom-facing header
+- Added Math With Dan branding
+- Added a direct website link to **https://mathwithdan.com**
+- Added a Quick Start section for students
+- Simplified the overall page flow:
+  1. Enter math
+  2. Choose a legal move
+  3. Watch the tiles
+- Kept Branch Results, Legal Transformations, and History visible
+- Moved the debug output into a collapsible **Advanced / Debug View**
+
+## Branding note
+
+The exact uploaded Math With Dan logo file was not present in this workspace, so this build uses a clean branded badge:
+- `mathwithdan_brand_badge.svg`
+
+If you want, we can easily swap this for your exact logo file later.
+
+## Main idea
+
+Tileify is still the same engine underneath:
+- additive crossing
+- multiplicative crossing
+- factoring
+- cancellation
+- absolute value splits
+- quadratic factoring
+- power moves
+- plus/minus branching
+- fractional-exponent notation
+- optional `i` extension for certain imaginary cases
+
+This version simply presents everything in a cleaner way for students and classroom use.
+
+
+## v1.2.1 patch
+
+### Parentheses language cleanup
+
+The visible **Remove Parentheses** button was removed.
+
+Tileify now treats **Expand / Open Parentheses** as the single student-facing action for opening parenthetical structure.
+
+This means a group created by:
+
+```txt
+Add parentheses around left side
+```
+
+can be opened again by:
+
+```txt
+Expand / Open Parentheses
+```
+
+### Existing fraction denominator fix
+
+When a side is already a fraction and an outside factor crosses into denominator position, the crossed factor now joins the existing denominator.
+
+Instead of creating a nested fraction like:
+
+```txt
+(20/4)/3
+```
+
+Tileify now creates a joined denominator structure like:
+
+```txt
+20/(4·3)
+```
+
+This better matches the Tileify idea that multiplicative movement creates denominator structure rather than hiding it.

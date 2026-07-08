@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tileify v1.2.1 Parentheses + Denominator Fix Sandbox</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div class="brand-row">
+        <a class="brand-lockup" href="https://mathwithdan.com" target="_blank" rel="noopener noreferrer">
+          <img src="mathwithdan_brand_badge.svg" alt="Math With Dan" class="brand-logo" />
+        </a>
+        <a class="site-link-button" href="https://mathwithdan.com" target="_blank" rel="noopener noreferrer">Visit mathwithdan.com</a>
+      </div>
+
+      <div class="hero-copy">
+        <p class="eyebrow">Tileify • Classroom Friendly Version</p>
+        <h1>Learn algebra as movement.</h1>
+        <p class="subtitle">
+          This version keeps the full Tileify engine with cleaner parentheses and denominator behavior.
+          Students can enter an equation, explore suggested moves, and discover how algebra works step by step.
+        </p>
+      </div>
+    </header>
+
+    <section class="panel welcome-panel">
+      <div class="panel-kicker">Quick Start</div>
+      <h2>How students should use this</h2>
+      <ol class="quick-start-list">
+        <li><strong>Enter a math expression or equation</strong> in the box below.</li>
+        <li><strong>Pick a suggested move</strong> from the action area.</li>
+        <li><strong>Watch the tiles change</strong> and look for patterns.</li>
+        <li><strong>Check Branch Results</strong> whenever a split happens.</li>
+      </ol>
+      <p class="note">
+        Tileify is built to support discovery. Students do not have to know the whole procedure in advance —
+        they can see the legal moves and investigate what happens.
+      </p>
+    </section>
+
+    <section class="panel input-panel">
+      <div class="panel-kicker">Step 1</div>
+      <h2>Enter your math</h2>
+      <label for="mathInput">Expression, equation, or inequality</label>
+      <div class="input-row">
+        <input id="mathInput" value="3x + 5 = 20" autocomplete="off" />
+        <button id="parseBtn">Start / Reset</button>
+      </div>
+
+      <div class="examples-wrap">
+        <p class="examples-title">Try an example:</p>
+        <div class="examples">
+          <button class="example" data-expression="3x + 5 = 20">3x + 5 = 20</button>
+          <button class="example" data-expression="4(x + 2) = 20">4(x + 2) = 20</button>
+          <button class="example" data-expression="3/x = 9">3/x = 9</button>
+          <button class="example" data-expression="|x - 3| = 7">|x - 3| = 7</button>
+          <button class="example" data-expression="x^2 - 8x = 4">x² - 8x = 4</button>
+          <button class="example" data-expression="x^2 + 5x + 6 = 0">x² + 5x + 6 = 0</button>
+          <button class="example" data-expression="-2(x - 5) < 8">-2(x - 5) &lt; 8</button>
+          <button class="example" data-expression="x/3 + 5 = 20">x/3 + 5 = 20</button>
+          <button class="example" data-expression="4(x - 1) + 2x">4(x - 1) + 2x</button>
+          <button class="example" data-expression="6">6</button>
+        </div>
+      </div>
+
+      <p class="note">
+        Tileify uses fractional exponents instead of square-root symbols when those ideas appear.
+        It also supports branching, plus/minus structure, and an <code>i</code> extension for certain imaginary-number cases.
+      </p>
+    </section>
+
+    <section class="panel action-panel">
+      <div class="panel-kicker">Step 2</div>
+      <h2>Choose a legal move</h2>
+      <p class="small-note">Use the main action buttons first, then look below for context-specific suggested moves. Parentheses are opened through Expand Parentheses.</p>
+
+      <div class="button-row">
+        <button id="toggleOnesBtn">Reveal Hidden /1s</button>
+        <button id="expandBtn">Expand / Open Parentheses</button>
+        <button id="combineBtn">Combine Like Terms</button>
+        <button id="revealFactorsBtn">Reveal Common Factors</button>
+        <button id="cancelFactorsBtn">Cancel Revealed Factors</button>
+      </div>
+
+      <div class="tool-grid">
+        <div class="tool-card">
+          <label for="addBothInput">Add the same tile to both sides</label>
+          <div class="tool-inline">
+            <input id="addBothInput" value="+1" autocomplete="off" />
+            <button id="addBothBtn">Add to Both Sides</button>
+          </div>
+        </div>
+
+        <div class="tool-card tool-card-purple">
+          <label for="powerBothInput">Raise both sides to a power</label>
+          <div class="tool-inline">
+            <input id="powerBothInput" value="1/2" autocomplete="off" />
+            <button id="powerBothBtn">Raise Both Sides</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="suggested-moves">
+        <h3>Suggested moves</h3>
+        <div id="moveButtons" class="move-buttons"></div>
+        <div id="multiplicativeButtons" class="move-buttons"></div>
+        <div id="groupButtons" class="move-buttons"></div>
+        <div id="absoluteButtons" class="move-buttons"></div>
+        <div id="quadraticButtons" class="move-buttons"></div>
+      </div>
+
+      <p id="message" class="message">Enter math and click Start / Reset to begin.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-kicker">Step 3</div>
+      <h2>Watch the tiles</h2>
+      <div id="tileView" class="tile-view"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Branch Results</h2>
+      <p class="small-note">When a split happens, the branches will appear here.</p>
+      <div id="branchView" class="branch-view"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Legal Transformations Detected</h2>
+      <p class="small-note">This helps students see what kinds of moves are currently available.</p>
+      <div id="transformations" class="transformations"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Transformation History</h2>
+      <ol id="historyList" class="history-list"></ol>
+    </section>
+
+    <details class="panel debug-details">
+      <summary>Advanced / Debug View</summary>
+      <p class="small-note">This section is mainly for testing and development.</p>
+      <pre id="debugOutput"></pre>
+    </details>
+
+    <footer class="app-footer">
+      <div class="footer-brand">
+        <img src="mathwithdan_brand_badge.svg" alt="Math With Dan" class="footer-logo" />
+      </div>
+      <div class="footer-copy">
+        <p><strong>Math With Dan</strong></p>
+        <p>Visit: <a href="https://mathwithdan.com" target="_blank" rel="noopener noreferrer">mathwithdan.com</a></p>
+      </div>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
