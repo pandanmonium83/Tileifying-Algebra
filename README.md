@@ -15,12 +15,6 @@ This build is a more user-friendly presentation of the current Tileify sandbox.
 - Kept Branch Results, Legal Transformations, and History visible
 - Moved the debug output into a collapsible **Advanced / Debug View**
 
-## Branding note
-
-The exact uploaded Math With Dan logo file was not present in this workspace, so this build uses a clean branded badge:
-- `mathwithdan_brand_badge.svg`
-
-If you want, we can easily swap this for your exact logo file later.
 
 ## Main idea
 
