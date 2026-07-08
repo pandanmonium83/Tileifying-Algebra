@@ -898,3 +898,31 @@ Expand / Open Parentheses
 ```
 
 for both repeated parenthetical expansion and opening a single grouped parenthetical tile.
+
+
+## v1.2.2 right-click property reveal
+
+Tile properties are hidden from the default student view.
+
+A right-click toggles the tile's property view.
+
+This separates:
+
+```txt
+student-facing visible tile
+```
+
+from:
+
+```txt
+teacher/developer hidden structure
+```
+
+while keeping both available in the same interface.
+
+
+## v1.2.3 layout note
+
+Tile layout is part of the learning model.
+
+Tiles should preserve left-to-right structure when possible. On small screens, horizontal scrolling is preferred over stacking because stacking can hide the algebraic relationship between terms.

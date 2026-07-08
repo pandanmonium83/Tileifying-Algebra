@@ -1,5 +1,5 @@
 /*
-  Tileify v1.2.1 Parentheses + Denominator Fix Sandbox
+  Tileify v1.2.3 Mobile Landscape Tile Layout Sandbox
 
   New/updated transformations:
   - Move an additive tile across an equation/inequality boundary.
@@ -70,6 +70,7 @@ let history = [];
 let showHiddenOnes = false;
 let currentBranches = [];
 let selectedTileIds = new Set();
+let revealedPropertyTileIds = new Set();
 
 const SUPERSCRIPT_MAP = {
   "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
@@ -2199,7 +2200,7 @@ function renderSelectionNote(container) {
   note.className = "note";
 
   if (!selected.length) {
-    note.textContent = "Click tiles to highlight them. Factoring buttons appear when the highlighted tiles contain revealable structure.";
+    note.textContent = "Click tiles to highlight them. Right-click a tile to reveal its hidden properties. Factoring buttons appear when highlighted tiles contain revealable structure.";
   } else {
     const selectedText = selected.map(item => tileCoreDisplay(item.tile, true)).join(", ");
     note.textContent = `Highlighted: ${selectedText}`;
@@ -2256,11 +2257,28 @@ function renderFraction(tile, label) {
 
 function renderTile(tile) {
   const div = document.createElement("div");
-  div.className = `tile ${tile.kind} ${tile.additiveCharge === "-" ? "negative" : "positive"} ${selectedTileIds.has(tile.id) ? "selected" : ""}`;
-  div.title = "Click to highlight/select this tile.";
+  const propertiesRevealed = revealedPropertyTileIds.has(tile.id);
+  div.className = `tile ${tile.kind} ${tile.additiveCharge === "-" ? "negative" : "positive"} ${selectedTileIds.has(tile.id) ? "selected" : ""} ${propertiesRevealed ? "properties-revealed" : ""}`;
+  div.title = propertiesRevealed
+    ? "Right-click to hide properties. Click to highlight/select this tile."
+    : "Click to highlight/select. Right-click to reveal hidden properties.";
   div.addEventListener("click", event => {
     event.stopPropagation();
     toggleTileSelection(tile.id);
+  });
+  div.addEventListener("contextmenu", event => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (revealedPropertyTileIds.has(tile.id)) {
+      revealedPropertyTileIds.delete(tile.id);
+      setMessage("Tile properties hidden.", "good");
+    } else {
+      revealedPropertyTileIds.add(tile.id);
+      setMessage("Tile properties revealed. Right-click the tile again to hide them.", "good");
+    }
+
+    renderModel(currentModel);
   });
 
   const charge = document.createElement("div");
@@ -5252,6 +5270,7 @@ function parseAndRender() {
     history = [];
     currentBranches = [];
     clearSelection();
+    revealedPropertyTileIds.clear();
     setMessage("Parsed successfully. Boundary crossing buttons are available when legal.", "good");
     renderModel(currentModel);
   } catch (err) {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tileify v1.2.1 Parentheses + Denominator Fix Sandbox</title>
+  <title>Tileify v1.2.3 Mobile Landscape Tile Layout Sandbox</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,11 +20,15 @@
         <p class="eyebrow">Tileify • Classroom Friendly Version</p>
         <h1>Learn algebra as movement.</h1>
         <p class="subtitle">
-          This version keeps the full Tileify engine with cleaner parentheses and denominator behavior.
-          Students can enter an equation, explore suggested moves, and discover how algebra works step by step.
+          This version keeps the full Tileify engine, keeps tile properties hidden until right-click, and improves the tile layout for smaller screens.
+          Students can enter an equation, explore suggested moves, and discover how algebra works step by step. Tile properties stay hidden unless revealed.
         </p>
       </div>
     </header>
+
+    <aside class="mobile-landscape-banner" aria-label="Mobile landscape recommendation">
+      <strong>Mobile tip:</strong> Tileify works best in landscape mode so the tiles can stay in a row.
+    </aside>
 
     <section class="panel welcome-panel">
       <div class="panel-kicker">Quick Start</div>
@@ -32,7 +36,7 @@
       <ol class="quick-start-list">
         <li><strong>Enter a math expression or equation</strong> in the box below.</li>
         <li><strong>Pick a suggested move</strong> from the action area.</li>
-        <li><strong>Watch the tiles change</strong> and look for patterns.</li>
+        <li><strong>Watch the tiles change</strong> and look for patterns. On phones, landscape mode keeps the tile row easier to read.</li>
         <li><strong>Check Branch Results</strong> whenever a split happens.</li>
       </ol>
       <p class="note">
@@ -75,7 +79,7 @@
     <section class="panel action-panel">
       <div class="panel-kicker">Step 2</div>
       <h2>Choose a legal move</h2>
-      <p class="small-note">Use the main action buttons first, then look below for context-specific suggested moves. Parentheses are opened through Expand Parentheses.</p>
+      <p class="small-note">Use the main action buttons first, then look below for context-specific suggested moves. Parentheses are opened through Expand Parentheses. Right-click a tile to reveal hidden properties.</p>
 
       <div class="button-row">
         <button id="toggleOnesBtn">Reveal Hidden /1s</button>

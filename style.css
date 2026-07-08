@@ -684,3 +684,232 @@ body {
 .tile.fraction {
   box-shadow: inset 0 0 0 1px rgba(217, 181, 111, 0.18);
 }
+
+
+/* ===== v1.2.2 right-click tile properties ===== */
+
+.tile {
+  transition: transform 160ms ease, box-shadow 160ms ease, min-width 160ms ease;
+}
+
+.tile-meta {
+  display: none;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0,0,0,0.12);
+}
+
+.tile.properties-revealed {
+  min-width: 132px;
+}
+
+.tile.properties-revealed .tile-meta {
+  display: block;
+}
+
+.tile.properties-revealed::after {
+  content: "properties";
+  position: absolute;
+  right: 8px;
+  bottom: -10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(47, 111, 115, 0.92);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tile:not(.properties-revealed) .tile-label {
+  margin: 2px 0;
+}
+
+@media (hover: none) {
+  .tile::before {
+    content: "hold";
+    position: absolute;
+    right: 7px;
+    top: -10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(96, 99, 106, 0.16);
+    color: var(--muted);
+    font-size: 0.58rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+}
+
+
+/* ===== v1.2.3 mobile/landscape tile layout ===== */
+
+.mobile-landscape-banner {
+  display: none;
+  margin: 12px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(245, 185, 66, 0.55);
+  border-radius: 14px;
+  background: rgba(245, 185, 66, 0.13);
+  color: #6b4a0f;
+  line-height: 1.35;
+}
+
+.tile-view {
+  flex-wrap: nowrap;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+
+.side {
+  min-width: min(520px, 82vw);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-align: start;
+}
+
+.tiles {
+  flex-wrap: nowrap;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 10px 4px 14px;
+  scroll-snap-type: x proximity;
+}
+
+.tile {
+  flex: 0 0 auto;
+  min-width: clamp(72px, 10vw, 120px);
+  max-width: clamp(110px, 18vw, 180px);
+  padding: clamp(7px, 1.2vw, 12px);
+  scroll-snap-align: start;
+}
+
+.tile-label {
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.fraction-display {
+  min-width: clamp(36px, 7vw, 58px);
+}
+
+.boundary {
+  position: sticky;
+  left: 0;
+  right: 0;
+  min-width: clamp(44px, 7vw, 70px);
+  background: linear-gradient(90deg, rgba(247,245,239,0.92), rgba(247,245,239,0.72));
+  z-index: 2;
+}
+
+.tile-view::-webkit-scrollbar,
+.tiles::-webkit-scrollbar,
+.side::-webkit-scrollbar {
+  height: 8px;
+}
+
+.tile-view::-webkit-scrollbar-thumb,
+.tiles::-webkit-scrollbar-thumb,
+.side::-webkit-scrollbar-thumb {
+  background: rgba(47, 111, 115, 0.32);
+  border-radius: 999px;
+}
+
+.tile-view::-webkit-scrollbar-track,
+.tiles::-webkit-scrollbar-track,
+.side::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.04);
+  border-radius: 999px;
+}
+
+@media (max-width: 760px) {
+  .mobile-landscape-banner {
+    display: block;
+  }
+
+  .app {
+    width: min(100% - 12px, 1180px);
+    margin-top: 8px;
+  }
+
+  .hero-copy,
+  .panel {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .tile-view {
+    gap: 8px;
+  }
+
+  .side {
+    min-width: 78vw;
+    padding: 10px;
+  }
+
+  .tile {
+    min-width: clamp(64px, 18vw, 92px);
+    max-width: clamp(88px, 26vw, 132px);
+  }
+
+  .tile.properties-revealed {
+    min-width: clamp(118px, 42vw, 180px);
+    max-width: clamp(150px, 58vw, 230px);
+  }
+
+  .tile-meta {
+    font-size: 0.68rem;
+  }
+
+  .boundary {
+    min-width: 38px;
+    font-size: 2rem;
+  }
+
+  .button-row,
+  .move-buttons,
+  .examples,
+  .tool-inline {
+    gap: 7px;
+  }
+
+  button {
+    padding: 9px 11px;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .mobile-landscape-banner {
+    display: block;
+    position: sticky;
+    top: 6px;
+    z-index: 8;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  }
+
+  .mobile-landscape-banner::after {
+    content: " Rotate your phone sideways for the best tile view.";
+  }
+}
+
+@media (max-width: 920px) and (orientation: landscape) {
+  .mobile-landscape-banner {
+    display: none;
+  }
+
+  .side {
+    min-width: 44vw;
+  }
+
+  .tile {
+    min-width: clamp(62px, 9vw, 96px);
+    max-width: clamp(88px, 14vw, 140px);
+  }
+}

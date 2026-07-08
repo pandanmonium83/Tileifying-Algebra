@@ -1,4 +1,4 @@
-# Tileify v1.2.1 Parentheses + Denominator Fix Sandbox
+# Tileify v1.2.3 Mobile Landscape Tile Layout Sandbox
 
 This build is a more user-friendly presentation of the current Tileify sandbox.
 
@@ -15,6 +15,12 @@ This build is a more user-friendly presentation of the current Tileify sandbox.
 - Kept Branch Results, Legal Transformations, and History visible
 - Moved the debug output into a collapsible **Advanced / Debug View**
 
+## Branding note
+
+The exact uploaded Math With Dan logo file was not present in this workspace, so this build uses a clean branded badge:
+- `mathwithdan_brand_badge.svg`
+
+If you want, we can easily swap this for your exact logo file later.
 
 ## Main idea
 
@@ -70,3 +76,51 @@ Tileify now creates a joined denominator structure like:
 ```
 
 This better matches the Tileify idea that multiplicative movement creates denominator structure rather than hiding it.
+
+
+## v1.2.2 patch
+
+### Tile properties hidden by default
+
+The visible tiles now show the mathematical tile label first, without showing the internal properties.
+
+Students can right-click a tile to reveal its properties:
+
+- kind
+- identity
+- additive count
+- completion
+- numerator / denominator position
+- factor notes when available
+
+Right-clicking the same tile again hides the properties.
+
+This keeps the student experience cleaner while still preserving the deeper Tileify model for debugging, teacher explanation, and discovery.
+
+
+## v1.2.3 patch
+
+### Tiles no longer stack vertically
+
+The tile view now keeps tiles in a horizontal row and uses side-scrolling when the row is too wide.
+
+This preserves the visual algebra structure better than allowing the tiles to wrap into multiple rows.
+
+### Responsive tile sizing
+
+Tiles now shrink more gracefully on smaller screens:
+
+- smaller min-width on mobile
+- responsive font sizing
+- horizontal scrolling inside each side
+- right-click/long-press properties still available
+
+### Mobile landscape recommendation
+
+A mobile tip banner appears on small screens, especially in portrait orientation:
+
+```txt
+Mobile tip: Tileify works best in landscape mode so the tiles can stay in a row.
+```
+
+This should make phone use more realistic without distorting the algebra structure.
