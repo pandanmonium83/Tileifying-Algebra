@@ -1,4 +1,4 @@
-# Tileify v1.2.3 Mobile Landscape Tile Layout Sandbox
+# Tileify v1.2.4 Transformations Allowed Near Tiles Sandbox
 
 This build is a more user-friendly presentation of the current Tileify sandbox.
 
@@ -124,3 +124,28 @@ Mobile tip: Tileify works best in landscape mode so the tiles can stay in a row.
 ```
 
 This should make phone use more realistic without distorting the algebra structure.
+
+
+## v1.2.4 patch
+
+### Suggested Moves renamed
+
+The student-facing action area is now called:
+
+```txt
+Transformations Allowed
+```
+
+instead of:
+
+```txt
+Suggested Moves
+```
+
+This is more accurate because Tileify is showing legal transformations, not just hints.
+
+### Transformations moved closer to the tiles
+
+The context-specific transformation buttons now appear directly below the visible tile field.
+
+This is especially important on phones because students need to see the current tile structure and the allowed moves together.

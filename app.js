@@ -1,5 +1,5 @@
 /*
-  Tileify v1.2.3 Mobile Landscape Tile Layout Sandbox
+  Tileify v1.2.4 Transformations Allowed Near Tiles Sandbox
 
   New/updated transformations:
   - Move an additive tile across an equation/inequality boundary.

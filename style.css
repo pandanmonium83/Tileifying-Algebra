@@ -913,3 +913,53 @@ body {
     max-width: clamp(88px, 14vw, 140px);
   }
 }
+
+
+/* ===== v1.2.4 transformations allowed near tile field ===== */
+
+.tile-workspace-panel {
+  scroll-margin-top: 12px;
+}
+
+.transformations-allowed-panel {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(47, 111, 115, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(47, 111, 115, 0.055), rgba(47, 111, 115, 0.025));
+}
+
+.transformations-allowed-panel h3 {
+  margin: 0 0 4px;
+  color: var(--accent);
+  font-size: 1.12rem;
+}
+
+.transformations-allowed-panel .move-buttons {
+  margin-top: 10px;
+}
+
+.transformations-allowed-panel:has(.move-action) {
+  border-color: rgba(47, 111, 115, 0.34);
+}
+
+@media (max-width: 760px) {
+  .transformations-allowed-panel {
+    margin-top: 12px;
+    padding: 12px;
+    position: relative;
+  }
+
+  .transformations-allowed-panel h3 {
+    font-size: 1rem;
+  }
+
+  .transformations-allowed-panel .small-note {
+    font-size: 0.86rem;
+  }
+
+  .transformations-allowed-panel .move-action {
+    width: 100%;
+    text-align: left;
+  }
+}

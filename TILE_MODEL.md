@@ -926,3 +926,14 @@ while keeping both available in the same interface.
 Tile layout is part of the learning model.
 
 Tiles should preserve left-to-right structure when possible. On small screens, horizontal scrolling is preferred over stacking because stacking can hide the algebraic relationship between terms.
+
+
+## v1.2.4 interface wording
+
+The student-facing phrase should be:
+
+```txt
+Transformations Allowed
+```
+
+This reinforces that Tileify is showing legal structure moves connected to the current tile state.

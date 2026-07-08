@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tileify v1.2.3 Mobile Landscape Tile Layout Sandbox</title>
+  <title>Tileify v1.2.4 Transformations Allowed Near Tiles Sandbox</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -79,7 +79,7 @@
     <section class="panel action-panel">
       <div class="panel-kicker">Step 2</div>
       <h2>Choose a legal move</h2>
-      <p class="small-note">Use the main action buttons first, then look below for context-specific suggested moves. Parentheses are opened through Expand Parentheses. Right-click a tile to reveal hidden properties.</p>
+      <p class="small-note">Use the main action buttons first, then check Transformations Allowed directly under the tile field. Parentheses are opened through Expand Parentheses. Right-click a tile to reveal hidden properties.</p>
 
       <div class="button-row">
         <button id="toggleOnesBtn">Reveal Hidden /1s</button>
@@ -107,22 +107,23 @@
         </div>
       </div>
 
-      <div class="suggested-moves">
-        <h3>Suggested moves</h3>
+      <p id="message" class="message">Enter math and click Start / Reset to begin.</p>
+    </section>
+
+    <section class="panel tile-workspace-panel">
+      <div class="panel-kicker">Step 3</div>
+      <h2>Watch the tiles</h2>
+      <div id="tileView" class="tile-view"></div>
+
+      <div class="transformations-allowed-panel" aria-label="Transformations allowed">
+        <h3>Transformations Allowed</h3>
+        <p class="small-note">These are the moves currently available for the visible tile structure.</p>
         <div id="moveButtons" class="move-buttons"></div>
         <div id="multiplicativeButtons" class="move-buttons"></div>
         <div id="groupButtons" class="move-buttons"></div>
         <div id="absoluteButtons" class="move-buttons"></div>
         <div id="quadraticButtons" class="move-buttons"></div>
       </div>
-
-      <p id="message" class="message">Enter math and click Start / Reset to begin.</p>
-    </section>
-
-    <section class="panel">
-      <div class="panel-kicker">Step 3</div>
-      <h2>Watch the tiles</h2>
-      <div id="tileView" class="tile-view"></div>
     </section>
 
     <section class="panel">
@@ -132,8 +133,8 @@
     </section>
 
     <section class="panel">
-      <h2>Legal Transformations Detected</h2>
-      <p class="small-note">This helps students see what kinds of moves are currently available.</p>
+      <h2>Transformation Details</h2>
+      <p class="small-note">This gives extra detail about why each transformation is available, locked, or conditional.</p>
       <div id="transformations" class="transformations"></div>
     </section>
 
