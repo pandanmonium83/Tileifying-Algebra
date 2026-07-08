@@ -937,3 +937,67 @@ Transformations Allowed
 ```
 
 This reinforces that Tileify is showing legal structure moves connected to the current tile state.
+
+
+## v1.2.5 student-facing tile rule
+
+Individual tile properties should not appear in the student-facing tile cards.
+
+The visible tile should prioritize the mathematical object only.
+
+```txt
++3x
+```
+
+not:
+
+```txt
+kind: variable
+identity: x
+add count: 3
+...
+```
+
+The internal structure remains available to the engine and debug output.
+
+
+## v1.2.6 interface simplification
+
+The student-facing interface should not offer unnecessary whole-left-side parentheses wrapping.
+
+The goal is to keep Transformations Allowed focused on moves that advance the algebraic structure.
+
+
+## v1.3.0 drag model
+
+Drag interactions are a physical layer over the existing legal transformations.
+
+A drag should not invent a new math rule.
+
+Instead, a drag gesture maps to an existing Tileify transformation:
+
+```txt
+drag whole tile across additive boundary
+→ moveAdditiveTileAcross
+```
+
+```txt
+drag outside factor handle to denominator zone
+→ moveMultiplicativeFactorAcross
+```
+
+The visual action should feel concrete, but the transformation still comes from the hidden legal model.
+
+
+## v1.3.1 drag-combine model
+
+Drag-combine maps a concrete gesture onto the existing like-term model.
+
+```txt
+drag one like term onto a matching like term
+→ combine their additive counts
+```
+
+Constants combine as rational constants.
+
+Variables combine only when their identity, completion, and multiplicative position match.

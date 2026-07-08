@@ -1,5 +1,5 @@
 /*
-  Tileify v1.2.4 Transformations Allowed Near Tiles Sandbox
+  Tileify v1.3.1 Drag-Combine Like Terms Sandbox
 
   New/updated transformations:
   - Move an additive tile across an equation/inequality boundary.
@@ -70,7 +70,21 @@ let history = [];
 let showHiddenOnes = false;
 let currentBranches = [];
 let selectedTileIds = new Set();
-let revealedPropertyTileIds = new Set();
+let suppressNextTileClick = false;
+
+let dragState = {
+  active: false,
+  pending: false,
+  tileId: null,
+  side: null,
+  dragKind: null,
+  tileEl: null,
+  startX: 0,
+  startY: 0,
+  ghost: null,
+  lastZone: null,
+  originalCharge: null
+};
 
 const SUPERSCRIPT_MAP = {
   "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4",
@@ -2139,6 +2153,476 @@ function clearSelection() {
   selectedTileIds.clear();
 }
 
+function findTileLocation(tileId, model = currentModel) {
+  if (!model) return null;
+
+  for (const side of ["left", "right"]) {
+    const tiles = model.sides[side] || [];
+    const index = tiles.findIndex(tile => tile.id === tileId);
+    if (index !== -1) {
+      return { side, index, tile: tiles[index] };
+    }
+  }
+
+  return null;
+}
+
+function tileCanDragOutsideFactor(tile) {
+  if (!tile || !currentModel) return false;
+  return getIsolatedMovableFactorTiles(currentModel).some(candidate => candidate.id === tile.id);
+}
+
+function outsideFactorLabelForTile(tile) {
+  if (!tile) return "";
+  const sign = tile.additiveCharge === "-" ? "-" : "";
+  return `${sign}${tile.additiveCount}`;
+}
+
+function makeWholeTileGhost(tileEl) {
+  const ghost = tileEl.cloneNode(true);
+  ghost.classList.remove("selected", "dragging-source", "drag-preview-additive", "drag-preview-denominator");
+  ghost.classList.add("drag-ghost", "whole-tile-ghost");
+  const handle = ghost.querySelector(".factor-handle");
+  if (handle) handle.remove();
+  return ghost;
+}
+
+function makeFactorGhost(tile) {
+  const ghost = document.createElement("div");
+  ghost.className = "drag-ghost factor-ghost";
+  ghost.innerHTML = `<strong>${outsideFactorLabelForTile(tile)}</strong><span>to denominator</span>`;
+  return ghost;
+}
+
+function beginPendingTileDrag(event, tile, dragKind = "tile") {
+  if (!currentModel || !currentModel.boundary) return;
+  if (event.button !== undefined && event.button !== 0) return;
+
+  const location = findTileLocation(tile.id);
+  if (!location) return;
+
+  dragState = {
+    active: false,
+    pending: true,
+    tileId: tile.id,
+    side: location.side,
+    dragKind,
+    tileEl: event.currentTarget.closest(".tile") || event.currentTarget,
+    startX: event.clientX,
+    startY: event.clientY,
+    ghost: null,
+    lastZone: null,
+    originalCharge: tile.additiveCharge
+  };
+
+  window.addEventListener("pointermove", moveTileDrag);
+  window.addEventListener("pointerup", endTileDrag);
+  window.addEventListener("pointercancel", endTileDrag);
+}
+
+function activateDrag(event) {
+  if (!dragState.pending || dragState.active) return;
+
+  const location = findTileLocation(dragState.tileId);
+  if (!location) return;
+
+  dragState.active = true;
+  suppressNextTileClick = true;
+
+  if (dragState.dragKind === "factor") {
+    dragState.ghost = makeFactorGhost(location.tile);
+  } else {
+    dragState.ghost = makeWholeTileGhost(dragState.tileEl);
+  }
+
+  dragState.ghost.style.position = "fixed";
+  dragState.ghost.style.pointerEvents = "none";
+  dragState.ghost.style.zIndex = "9999";
+  dragState.ghost.style.left = "-9999px";
+  dragState.ghost.style.top = "-9999px";
+  document.body.appendChild(dragState.ghost);
+
+  if (dragState.tileEl) dragState.tileEl.classList.add("dragging-source");
+  document.body.classList.add("dragging-tile");
+
+  moveDragGhost(event.clientX, event.clientY);
+  updateDragZone(event.clientX, event.clientY);
+}
+
+function moveTileDrag(event) {
+  if (!dragState.pending) return;
+
+  const dx = event.clientX - dragState.startX;
+  const dy = event.clientY - dragState.startY;
+  const distance = Math.hypot(dx, dy);
+
+  if (!dragState.active && distance > 7) {
+    activateDrag(event);
+  }
+
+  if (!dragState.active) return;
+
+  event.preventDefault();
+  moveDragGhost(event.clientX, event.clientY);
+  updateDragZone(event.clientX, event.clientY);
+}
+
+function moveDragGhost(x, y) {
+  if (!dragState.ghost) return;
+  dragState.ghost.style.left = `${x + 12}px`;
+  dragState.ghost.style.top = `${y + 12}px`;
+}
+
+function cleanupDragListeners() {
+  window.removeEventListener("pointermove", moveTileDrag);
+  window.removeEventListener("pointerup", endTileDrag);
+  window.removeEventListener("pointercancel", endTileDrag);
+}
+
+function cleanupDragGhost() {
+  if (dragState.ghost && dragState.ghost.parentNode) {
+    dragState.ghost.parentNode.removeChild(dragState.ghost);
+  }
+  dragState.ghost = null;
+}
+
+function clearDropZoneHighlights() {
+  document.querySelectorAll(".side.drop-additive, .denominator-drop-zone.active, .tile.drop-combine-target").forEach(el => {
+    el.classList.remove("drop-additive", "active", "drop-combine-target");
+  });
+}
+
+function setTileDragPreview(tileId, mode) {
+  document.querySelectorAll(".tile.drag-preview-additive, .tile.drag-preview-denominator, .tile.drag-preview-combine").forEach(el => {
+    el.classList.remove("drag-preview-additive", "drag-preview-denominator", "drag-preview-combine");
+  });
+
+  const tileEl = Array.from(document.querySelectorAll(".tile")).find(el => el.dataset.tileId === tileId);
+  if (!tileEl) return;
+
+  if (mode === "additive") tileEl.classList.add("drag-preview-additive");
+  if (mode === "denominator") tileEl.classList.add("drag-preview-denominator");
+  if (mode === "combine") tileEl.classList.add("drag-preview-combine");
+}
+
+function clearTileDragPreview() {
+  document.querySelectorAll(".tile.drag-preview-additive, .tile.drag-preview-denominator, .tile.drag-preview-combine").forEach(el => {
+    el.classList.remove("drag-preview-additive", "drag-preview-denominator", "drag-preview-combine");
+  });
+}
+
+function setGhostChargePreview(mode) {
+  if (!dragState.ghost || dragState.dragKind !== "tile") return;
+
+  const charge = dragState.ghost.querySelector(".charge");
+  if (!charge) return;
+
+  if (mode === "additive") {
+    charge.textContent = dragState.originalCharge === "-" ? "+" : "-";
+    dragState.ghost.classList.add("ghost-charge-flipped");
+  } else {
+    charge.textContent = dragState.originalCharge || charge.textContent;
+    dragState.ghost.classList.remove("ghost-charge-flipped");
+  }
+}
+
+function getSideFromTitle(title) {
+  if (title === "Left Side") return "left";
+  if (title === "Right Side") return "right";
+  return "left";
+}
+
+function getDragZoneFromPoint(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+
+  const denominatorZone = el.closest(".denominator-drop-zone");
+  if (denominatorZone) {
+    return {
+      mode: "denominator",
+      side: denominatorZone.dataset.side
+    };
+  }
+
+  const tileEl = el.closest(".tile");
+  if (tileEl && tileEl.dataset.tileId) {
+    const location = findTileLocation(tileEl.dataset.tileId);
+    if (location) {
+      return {
+        mode: "combine",
+        side: location.side,
+        tileId: tileEl.dataset.tileId
+      };
+    }
+  }
+
+  const sideEl = el.closest(".side");
+  if (sideEl) {
+    return {
+      mode: "additive",
+      side: sideEl.dataset.side
+    };
+  }
+
+  return null;
+}
+
+function updateDragZone(x, y) {
+  clearDropZoneHighlights();
+
+  const zone = getDragZoneFromPoint(x, y);
+  dragState.lastZone = zone;
+
+  if (!zone || !dragState.tileId || !dragState.side) {
+    clearTileDragPreview();
+    setGhostChargePreview(null);
+    return;
+  }
+
+  if (zone.mode === "combine" && dragState.dragKind === "tile") {
+    const sourceLocation = findTileLocation(dragState.tileId);
+    const targetLocation = findTileLocation(zone.tileId);
+
+    if (
+      sourceLocation &&
+      targetLocation &&
+      canDragCombineTiles(sourceLocation.tile, targetLocation.tile)
+    ) {
+      const targetEl = Array.from(document.querySelectorAll(".tile")).find(el => el.dataset.tileId === zone.tileId);
+      if (targetEl) targetEl.classList.add("drop-combine-target");
+      setTileDragPreview(dragState.tileId, "combine");
+      setGhostChargePreview(null);
+      return;
+    }
+  }
+
+  if (zone.side === dragState.side) {
+    clearTileDragPreview();
+    setGhostChargePreview(null);
+    return;
+  }
+
+  if (zone.mode === "denominator") {
+    const location = findTileLocation(dragState.tileId);
+    if (location && tileCanDragOutsideFactor(location.tile)) {
+      const zoneEl = document.querySelector(`.denominator-drop-zone[data-side="${zone.side}"]`);
+      if (zoneEl) zoneEl.classList.add("active");
+      setTileDragPreview(dragState.tileId, "denominator");
+      setGhostChargePreview(null);
+      return;
+    }
+  }
+
+  if (zone.mode === "additive" && dragState.dragKind === "tile") {
+    const sideEl = Array.from(document.querySelectorAll(".side")).find(el => el.dataset.side === zone.side);
+    if (sideEl) sideEl.classList.add("drop-additive");
+    setTileDragPreview(dragState.tileId, "additive");
+    setGhostChargePreview("additive");
+    return;
+  }
+
+  clearTileDragPreview();
+  setGhostChargePreview(null);
+}
+
+function resetDragState() {
+  dragState = {
+    active: false,
+    pending: false,
+    tileId: null,
+    side: null,
+    dragKind: null,
+    tileEl: null,
+    startX: 0,
+    startY: 0,
+    ghost: null,
+    lastZone: null,
+    originalCharge: null
+  };
+}
+
+function safeMoveAdditiveByDrag(tileId) {
+  if (!currentModel || !currentModel.boundary) {
+    setMessage("Additive crossing needs an equation or inequality boundary.", "warn");
+    return false;
+  }
+
+  const location = findTileLocation(tileId);
+  if (!location) {
+    setMessage("Could not find that tile.", "warn");
+    return false;
+  }
+
+  moveAdditiveTileAcross(tileId);
+  return true;
+}
+
+function safeMoveOutsideFactorByDrag(tileId) {
+  if (!currentModel || !currentModel.boundary) {
+    setMessage("Multiplicative movement needs an equation or inequality boundary.", "warn");
+    return false;
+  }
+
+  const location = findTileLocation(tileId);
+  if (!location || !tileCanDragOutsideFactor(location.tile)) {
+    setMessage("That outside factor is not ready to move. It may need to be isolated first.", "warn");
+    return false;
+  }
+
+  moveMultiplicativeFactorAcross(tileId);
+  return true;
+}
+
+
+function canDragCombineTiles(sourceTile, targetTile) {
+  if (!sourceTile || !targetTile) return false;
+  if (sourceTile.id === targetTile.id) return false;
+  if (sourceTile.side !== targetTile.side) return false;
+
+  const sourceRational = rationalFromConstantLikeTile(sourceTile);
+  const targetRational = rationalFromConstantLikeTile(targetTile);
+
+  if (sourceRational && targetRational) return true;
+
+  return sourceTile.kind === "variable" &&
+    targetTile.kind === "variable" &&
+    sourceTile.likeSignature &&
+    sourceTile.likeSignature === targetTile.likeSignature;
+}
+
+function combineTwoTilesByDrag(sourceTileId, targetTileId) {
+  if (!currentModel) return false;
+
+  const source = findTileLocation(sourceTileId);
+  const target = findTileLocation(targetTileId);
+
+  if (!source || !target || source.side !== target.side || source.index === target.index) {
+    setMessage("Those tiles cannot combine.", "warn");
+    return false;
+  }
+
+  if (!canDragCombineTiles(source.tile, target.tile)) {
+    setMessage("Only matching like terms can snap together.", "warn");
+    return false;
+  }
+
+  const side = source.side;
+  const remaining = currentModel.sides[side].filter(tile =>
+    tile.id !== sourceTileId && tile.id !== targetTileId
+  );
+
+  let combinedTile = null;
+
+  const sourceRational = rationalFromConstantLikeTile(source.tile);
+  const targetRational = rationalFromConstantLikeTile(target.tile);
+
+  if (sourceRational && targetRational) {
+    const sum = addRationals(sourceRational, targetRational);
+    const normalized = normalizeRational(sum.numerator, sum.denominator);
+
+    if (normalized.numerator !== 0 || remaining.length === 0) {
+      combinedTile = makeRationalConstantTile({
+        side,
+        index: remaining.length,
+        numerator: normalized.numerator,
+        denominator: normalized.denominator
+      });
+    }
+  } else {
+    const total = signedAdditiveCount(source.tile) + signedAdditiveCount(target.tile);
+
+    if (total !== 0 || remaining.length === 0) {
+      const sample = source.tile;
+      combinedTile = makeVariableTile({
+        side,
+        index: remaining.length,
+        identity: sample.identity,
+        multiplicativeCompletion: sample.multiplicativeCompletion,
+        multiplicativePosition: sample.multiplicativePosition,
+        signedAdditiveCount: total
+      });
+    }
+  }
+
+  if (combinedTile) remaining.push(combinedTile);
+  if (remaining.length === 0) {
+    remaining.push(makeConstantTile({ side, index: 0, signedAdditiveCount: 0 }));
+  }
+
+  const nextSides = {
+    left: [...currentModel.sides.left],
+    right: currentModel.boundary ? [...currentModel.sides.right] : []
+  };
+
+  nextSides[side] = remaining;
+
+  currentModel = cleanupModelZeros({
+    ...currentModel,
+    sides: nextSides,
+    lastTransformation: "Drag Combine Like Terms"
+  });
+
+  clearSelection();
+  history.push(`Dragged ${tileReadableLabel(source.tile)} onto ${tileReadableLabel(target.tile)} and combined like terms.`);
+  setMessage("Like terms snapped together and combined.", "good");
+  renderModel(currentModel);
+  return true;
+}
+
+function endTileDrag(event) {
+  if (!dragState.pending) return;
+
+  cleanupDragListeners();
+
+  if (!dragState.active) {
+    resetDragState();
+    return;
+  }
+
+  if (event && event.preventDefault) event.preventDefault();
+
+  const tileId = dragState.tileId;
+  const startSide = dragState.side;
+  const dragKind = dragState.dragKind;
+  const zone = dragState.lastZone || getDragZoneFromPoint(event.clientX, event.clientY);
+
+  document.querySelectorAll(".tile.dragging-source").forEach(el => el.classList.remove("dragging-source"));
+  document.body.classList.remove("dragging-tile");
+  cleanupDragGhost();
+  clearTileDragPreview();
+  clearDropZoneHighlights();
+
+  resetDragState();
+
+  if (!zone) {
+    setMessage("Tile snapped back. Drag onto a matching like term or across the boundary to transform it.", "warn");
+    return;
+  }
+
+  if (zone.mode === "combine" && dragKind === "tile") {
+    combineTwoTilesByDrag(tileId, zone.tileId);
+    return;
+  }
+
+  if (zone.side === startSide) {
+    setMessage("Tile snapped back. Drag onto a matching like term or across the boundary to transform it.", "warn");
+    return;
+  }
+
+  if (zone.mode === "denominator") {
+    safeMoveOutsideFactorByDrag(tileId);
+    return;
+  }
+
+  if (zone.mode === "additive" && dragKind === "tile") {
+    safeMoveAdditiveByDrag(tileId);
+    return;
+  }
+
+  setMessage("That drag path is not a legal transformation yet.", "warn");
+}
+
+
 function getAllModelTiles(model = currentModel) {
   if (!model) return [];
   return [...model.sides.left, ...model.sides.right];
@@ -2200,7 +2684,7 @@ function renderSelectionNote(container) {
   note.className = "note";
 
   if (!selected.length) {
-    note.textContent = "Click tiles to highlight them. Right-click a tile to reveal its hidden properties. Factoring buttons appear when highlighted tiles contain revealable structure.";
+    note.textContent = "Click tiles to highlight them. Factoring buttons appear when highlighted tiles contain revealable structure.";
   } else {
     const selectedText = selected.map(item => tileCoreDisplay(item.tile, true)).join(", ");
     note.textContent = `Highlighted: ${selectedText}`;
@@ -2257,28 +2741,20 @@ function renderFraction(tile, label) {
 
 function renderTile(tile) {
   const div = document.createElement("div");
-  const propertiesRevealed = revealedPropertyTileIds.has(tile.id);
-  div.className = `tile ${tile.kind} ${tile.additiveCharge === "-" ? "negative" : "positive"} ${selectedTileIds.has(tile.id) ? "selected" : ""} ${propertiesRevealed ? "properties-revealed" : ""}`;
-  div.title = propertiesRevealed
-    ? "Right-click to hide properties. Click to highlight/select this tile."
-    : "Click to highlight/select. Right-click to reveal hidden properties.";
+  div.className = `tile ${tile.kind} ${tile.additiveCharge === "-" ? "negative" : "positive"} ${selectedTileIds.has(tile.id) ? "selected" : ""}`;
+  div.dataset.tileId = tile.id;
+  div.title = "Click to highlight/select. Drag across the boundary to transform.";
   div.addEventListener("click", event => {
     event.stopPropagation();
+    if (suppressNextTileClick) {
+      suppressNextTileClick = false;
+      return;
+    }
     toggleTileSelection(tile.id);
   });
-  div.addEventListener("contextmenu", event => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (revealedPropertyTileIds.has(tile.id)) {
-      revealedPropertyTileIds.delete(tile.id);
-      setMessage("Tile properties hidden.", "good");
-    } else {
-      revealedPropertyTileIds.add(tile.id);
-      setMessage("Tile properties revealed. Right-click the tile again to hide them.", "good");
-    }
-
-    renderModel(currentModel);
+  div.addEventListener("pointerdown", event => {
+    if (event.target.closest(".factor-handle")) return;
+    beginPendingTileDrag(event, tile, "tile");
   });
 
   const charge = document.createElement("div");
@@ -2338,12 +2814,31 @@ function renderTile(tile) {
   div.appendChild(charge);
   div.appendChild(label);
   div.appendChild(meta);
+
+  if (tileCanDragOutsideFactor(tile)) {
+    const factorHandle = document.createElement("button");
+    factorHandle.type = "button";
+    factorHandle.className = "factor-handle";
+    factorHandle.innerHTML = `<span>grab</span><strong>${outsideFactorLabelForTile(tile)}</strong>`;
+    factorHandle.title = "Drag this outside factor to the opposite denominator zone.";
+    factorHandle.addEventListener("click", event => {
+      event.stopPropagation();
+    });
+    factorHandle.addEventListener("pointerdown", event => {
+      event.stopPropagation();
+      beginPendingTileDrag(event, tile, "factor");
+    });
+    div.appendChild(factorHandle);
+  }
+
   return div;
 }
 
 function renderSide(title, tiles) {
+  const sideName = getSideFromTitle(title);
   const sideDiv = document.createElement("div");
   sideDiv.className = "side";
+  sideDiv.dataset.side = sideName;
 
   const sideTitle = document.createElement("div");
   sideTitle.className = "side-title";
@@ -2363,6 +2858,15 @@ function renderSide(title, tiles) {
 
   sideDiv.appendChild(sideTitle);
   sideDiv.appendChild(tilesDiv);
+
+  if (currentModel && currentModel.boundary) {
+    const denominatorZone = document.createElement("div");
+    denominatorZone.className = "denominator-drop-zone";
+    denominatorZone.dataset.side = sideName;
+    denominatorZone.innerHTML = "<span>drop outside factor here for denominator</span>";
+    sideDiv.appendChild(denominatorZone);
+  }
+
   return sideDiv;
 }
 
@@ -4398,19 +4902,19 @@ function renderMultiplicativeButtons(model) {
 function renderGroupButtons(model) {
   groupButtons.innerHTML = "";
 
-  if (!model) return;
+  // v1.2.6: left-side whole-parentheses wrapping was removed from the
+  // student interface because it was unnecessary and visually confusing.
+  if (!model || !model.boundary) return;
 
-  for (const side of ["left", "right"]) {
-    if (side === "right" && !model.boundary) continue;
+  const side = "right";
+  const tiles = model.sides[side];
 
-    const tiles = model.sides[side];
-    if (tiles && tiles.length > 1) {
-      const btn = document.createElement("button");
-      btn.className = "move-action";
-      btn.innerHTML = `Add parentheses around <strong>${side}</strong> side`;
-      btn.addEventListener("click", () => groupWholeSide(side));
-      groupButtons.appendChild(btn);
-    }
+  if (tiles && tiles.length > 1) {
+    const btn = document.createElement("button");
+    btn.className = "move-action";
+    btn.innerHTML = `Add parentheses around <strong>right</strong> side`;
+    btn.addEventListener("click", () => groupWholeSide(side));
+    groupButtons.appendChild(btn);
   }
 }
 
@@ -5270,7 +5774,6 @@ function parseAndRender() {
     history = [];
     currentBranches = [];
     clearSelection();
-    revealedPropertyTileIds.clear();
     setMessage("Parsed successfully. Boundary crossing buttons are available when legal.", "good");
     renderModel(currentModel);
   } catch (err) {

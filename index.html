@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tileify v1.2.4 Transformations Allowed Near Tiles Sandbox</title>
+  <title>Tileify v1.3.1 Drag-Combine Like Terms Sandbox</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,8 +20,8 @@
         <p class="eyebrow">Tileify • Classroom Friendly Version</p>
         <h1>Learn algebra as movement.</h1>
         <p class="subtitle">
-          This version keeps the full Tileify engine, keeps tile properties hidden until right-click, and improves the tile layout for smaller screens.
-          Students can enter an equation, explore suggested moves, and discover how algebra works step by step. Tile properties stay hidden unless revealed.
+          This version keeps the full Tileify engine, but adds drag-and-snap tile movement so the app feels more like a concrete manipulative.
+          Students can enter an equation, drag tiles across the boundary, or use the allowed transformation buttons right where they are working.
         </p>
       </div>
     </header>
@@ -35,8 +35,8 @@
       <h2>How students should use this</h2>
       <ol class="quick-start-list">
         <li><strong>Enter a math expression or equation</strong> in the box below.</li>
-        <li><strong>Pick a suggested move</strong> from the action area.</li>
-        <li><strong>Watch the tiles change</strong> and look for patterns. On phones, landscape mode keeps the tile row easier to read.</li>
+        <li><strong>Drag matching like terms together</strong>, drag across the boundary, or pick a transformation button.</li>
+        <li><strong>Watch the tiles snap into place</strong> and look for patterns. On phones, landscape mode keeps the tile row easier to read.</li>
         <li><strong>Check Branch Results</strong> whenever a split happens.</li>
       </ol>
       <p class="note">
@@ -76,53 +76,59 @@
       </p>
     </section>
 
-    <section class="panel action-panel">
+    <section class="panel tile-workspace-panel">
       <div class="panel-kicker">Step 2</div>
-      <h2>Choose a legal move</h2>
-      <p class="small-note">Use the main action buttons first, then check Transformations Allowed directly under the tile field. Parentheses are opened through Expand Parentheses. Right-click a tile to reveal hidden properties.</p>
+      <h2>Work with the tiles</h2>
+      <p class="small-note">The tile field comes first. Drag a tile across the boundary, or use the buttons directly below the tiles.</p>
 
-      <div class="button-row">
-        <button id="toggleOnesBtn">Reveal Hidden /1s</button>
-        <button id="expandBtn">Expand / Open Parentheses</button>
-        <button id="combineBtn">Combine Like Terms</button>
-        <button id="revealFactorsBtn">Reveal Common Factors</button>
-        <button id="cancelFactorsBtn">Cancel Revealed Factors</button>
-      </div>
-
-      <div class="tool-grid">
-        <div class="tool-card">
-          <label for="addBothInput">Add the same tile to both sides</label>
-          <div class="tool-inline">
-            <input id="addBothInput" value="+1" autocomplete="off" />
-            <button id="addBothBtn">Add to Both Sides</button>
-          </div>
-        </div>
-
-        <div class="tool-card tool-card-purple">
-          <label for="powerBothInput">Raise both sides to a power</label>
-          <div class="tool-inline">
-            <input id="powerBothInput" value="1/2" autocomplete="off" />
-            <button id="powerBothBtn">Raise Both Sides</button>
-          </div>
-        </div>
-      </div>
+      <div class="drag-instructions"><strong>Drag mode:</strong> drag a tile onto a matching like term to combine. Drag a whole tile across the boundary for additive movement. Drag the small outside-factor handle to the other side’s denominator drop zone for denominator movement.</div>
+      <div id="tileView" class="tile-view"></div>
 
       <p id="message" class="message">Enter math and click Start / Reset to begin.</p>
-    </section>
-
-    <section class="panel tile-workspace-panel">
-      <div class="panel-kicker">Step 3</div>
-      <h2>Watch the tiles</h2>
-      <div id="tileView" class="tile-view"></div>
 
       <div class="transformations-allowed-panel" aria-label="Transformations allowed">
         <h3>Transformations Allowed</h3>
-        <p class="small-note">These are the moves currently available for the visible tile structure.</p>
+        <p class="small-note">These buttons stay available for guided mode, even though many moves can now be done by dragging.</p>
         <div id="moveButtons" class="move-buttons"></div>
         <div id="multiplicativeButtons" class="move-buttons"></div>
         <div id="groupButtons" class="move-buttons"></div>
         <div id="absoluteButtons" class="move-buttons"></div>
         <div id="quadraticButtons" class="move-buttons"></div>
+      </div>
+
+      <div class="core-actions-panel">
+        <h3>Core Actions</h3>
+        <p class="small-note">These are always nearby because students use them often.</p>
+        <div class="button-row">
+          <button id="toggleOnesBtn">Reveal Hidden /1s</button>
+          <button id="expandBtn">Expand / Open Parentheses</button>
+          <button id="combineBtn">Combine Like Terms</button>
+          <button id="revealFactorsBtn">Reveal Common Factors</button>
+          <button id="cancelFactorsBtn">Cancel Revealed Factors</button>
+        </div>
+      </div>
+
+      <div class="advanced-action-tools">
+        <h3>Extra Tools</h3>
+        <p class="small-note">Use these when you need to build a new structure, like completing the square.</p>
+
+        <div class="tool-grid">
+          <div class="tool-card">
+            <label for="addBothInput">Add the same tile to both sides</label>
+            <div class="tool-inline">
+              <input id="addBothInput" value="+1" autocomplete="off" />
+              <button id="addBothBtn">Add to Both Sides</button>
+            </div>
+          </div>
+
+          <div class="tool-card tool-card-purple">
+            <label for="powerBothInput">Raise both sides to a power</label>
+            <div class="tool-inline">
+              <input id="powerBothInput" value="1/2" autocomplete="off" />
+              <button id="powerBothBtn">Raise Both Sides</button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 

@@ -1,4 +1,4 @@
-# Tileify v1.2.4 Transformations Allowed Near Tiles Sandbox
+# Tileify v1.3.1 Drag-Combine Like Terms Sandbox
 
 This build is a more user-friendly presentation of the current Tileify sandbox.
 
@@ -149,3 +149,137 @@ This is more accurate because Tileify is showing legal transformations, not just
 The context-specific transformation buttons now appear directly below the visible tile field.
 
 This is especially important on phones because students need to see the current tile structure and the allowed moves together.
+
+
+## v1.2.5 patch
+
+### Tile properties removed from the student interface
+
+Tile properties are no longer revealable by right-click.
+
+The tile view is now fully student-facing:
+
+```txt
+math label only
+```
+
+The deeper model still exists internally and in the Advanced / Debug View, but individual tiles no longer expose their properties.
+
+### Tile field moved above the action workflow
+
+The main workspace now appears in this order:
+
+```txt
+Tile field
+Transformations Allowed
+Core Actions
+Extra Tools
+```
+
+This puts the tile field and the buttons students need closest together, especially on phones.
+
+### Core actions moved closer
+
+Frequently used buttons now sit close to the tile field:
+
+- Reveal Hidden /1s
+- Expand / Open Parentheses
+- Combine Like Terms
+- Reveal Common Factors
+- Cancel Revealed Factors
+
+### Extra tools moved lower
+
+Less frequent structure-building tools are lower in the same workspace:
+
+- Add the same tile to both sides
+- Raise both sides to a power
+
+
+## v1.2.6 patch
+
+### Removed left-side add-parentheses action
+
+The app no longer shows the transformation for adding parentheses around the left side.
+
+This keeps the student interface cleaner and avoids an unnecessary move.
+
+
+## v1.3.0 major patch
+
+### Drag-and-snap manipulation
+
+Tileify now has a first drag-based manipulative layer.
+
+Students can still use the transformation buttons, but they can also physically drag tiles.
+
+### Additive movement
+
+Drag a whole tile from one side of the boundary to the other side.
+
+When the tile crosses into the opposite side, the drag preview flips its charge. When dropped, Tileify performs the additive boundary crossing and snaps the tile into place.
+
+### Multiplicative denominator movement
+
+For isolated tiles with an outside factor, Tileify now shows a small factor handle.
+
+Drag that handle to the denominator drop zone on the opposite side.
+
+Example idea:
+
+```txt
+3x = 15
+```
+
+Drag the `grab 3` handle to the right denominator zone:
+
+```txt
+x = 15/3
+```
+
+### Guided mode remains
+
+The old transformation buttons remain under:
+
+```txt
+Transformations Allowed
+```
+
+This keeps the app usable for students who prefer clicking or need guided moves.
+
+
+## v1.3.1 patch
+
+### Drag-combine like terms
+
+Students can now drag one like term onto another matching like term on the same side.
+
+When the target can legally combine, it highlights with a **combine** marker.
+
+Dropping the tile snaps the terms together and combines them.
+
+Examples:
+
+```txt
+2x + 5x
+```
+
+Drag `2x` onto `5x`:
+
+```txt
+7x
+```
+
+```txt
+3 + 4
+```
+
+Drag `3` onto `4`:
+
+```txt
+7
+```
+
+### Button still remains
+
+The regular **Combine Like Terms** button remains available as guided mode.

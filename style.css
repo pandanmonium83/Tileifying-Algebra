@@ -963,3 +963,293 @@ body {
     text-align: left;
   }
 }
+
+
+/* ===== v1.2.5 student layout + no tile properties ===== */
+
+.tile-meta,
+.tile.properties-revealed .tile-meta {
+  display: none !important;
+}
+
+.tile.properties-revealed::after,
+.tile::before {
+  content: none !important;
+}
+
+.tile {
+  cursor: pointer;
+}
+
+.tile-workspace-panel {
+  border-color: rgba(47, 111, 115, 0.28);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(247,250,252,0.98));
+}
+
+.tile-workspace-panel .tile-view {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.core-actions-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(47, 111, 115, 0.20);
+  border-radius: 16px;
+  background: rgba(47, 111, 115, 0.035);
+}
+
+.core-actions-panel h3,
+.advanced-action-tools h3 {
+  margin: 0 0 4px;
+  color: var(--accent);
+  font-size: 1.12rem;
+}
+
+.core-actions-panel .button-row {
+  margin-top: 10px;
+}
+
+.advanced-action-tools {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px dashed rgba(96, 99, 106, 0.22);
+  border-radius: 16px;
+  background: rgba(96, 99, 106, 0.025);
+}
+
+.action-panel {
+  display: none;
+}
+
+.tile-label {
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .core-actions-panel,
+  .advanced-action-tools,
+  .transformations-allowed-panel {
+    padding: 10px;
+  }
+
+  .core-actions-panel .button-row button,
+  .transformations-allowed-panel .move-action {
+    width: 100%;
+    text-align: left;
+  }
+
+  .advanced-action-tools {
+    margin-top: 18px;
+  }
+}
+
+
+/* ===== v1.3.0 drag + snap manipulative layer ===== */
+
+.drag-instructions {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(65, 92, 180, 0.22);
+  border-radius: 14px;
+  background: rgba(65, 92, 180, 0.055);
+  color: #2b376f;
+  line-height: 1.4;
+}
+
+.tile {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+.dragging-tile {
+  cursor: grabbing;
+}
+
+.tile.dragging-source {
+  opacity: 0.38;
+  transform: scale(0.96);
+}
+
+.drag-ghost {
+  opacity: 0.94;
+  pointer-events: none;
+  transform: rotate(-1deg) scale(1.04);
+  box-shadow: 0 18px 38px rgba(0,0,0,0.18);
+}
+
+.whole-tile-ghost {
+  background: white;
+}
+
+.ghost-charge-flipped {
+  border-color: rgba(181, 87, 69, 0.88) !important;
+}
+
+.ghost-charge-flipped .charge {
+  background: #b55745 !important;
+}
+
+.side {
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.side.drop-additive {
+  border-color: rgba(181, 87, 69, 0.75);
+  background: rgba(181, 87, 69, 0.06);
+  box-shadow: inset 0 0 0 2px rgba(181, 87, 69, 0.14);
+}
+
+.tile.drag-preview-additive {
+  border-color: rgba(181, 87, 69, 0.85);
+  box-shadow: 0 0 0 5px rgba(181, 87, 69, 0.14);
+}
+
+.tile.drag-preview-denominator {
+  border-color: rgba(217, 181, 111, 0.95);
+  box-shadow: 0 0 0 5px rgba(217, 181, 111, 0.18);
+}
+
+.denominator-drop-zone {
+  margin-top: 10px;
+  min-height: 34px;
+  border: 1px dashed rgba(217, 181, 111, 0.58);
+  border-radius: 12px;
+  background: rgba(217, 181, 111, 0.08);
+  display: grid;
+  place-items: center;
+  color: #7a5516;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.72;
+  transition: background 160ms ease, border-color 160ms ease, opacity 160ms ease, transform 160ms ease;
+}
+
+.denominator-drop-zone.active {
+  opacity: 1;
+  border-color: rgba(217, 181, 111, 0.95);
+  background: rgba(217, 181, 111, 0.2);
+  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 2px rgba(217, 181, 111, 0.16);
+}
+
+.denominator-drop-zone span {
+  pointer-events: none;
+}
+
+.factor-handle {
+  position: absolute;
+  top: -12px;
+  right: -10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(217, 181, 111, 0.88);
+  background: #fffaf0;
+  color: #7a5516;
+  font-size: 0.66rem;
+  line-height: 1;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  cursor: grab;
+  z-index: 3;
+}
+
+.factor-handle span {
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+}
+
+.factor-handle strong {
+  font-size: 0.8rem;
+}
+
+.factor-handle:active {
+  cursor: grabbing;
+}
+
+.factor-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px;
+  border-radius: 999px;
+  border: 2px solid rgba(217, 181, 111, 0.95);
+  background: #fffaf0;
+  color: #7a5516;
+  font-weight: 900;
+}
+
+.factor-ghost span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 760px) {
+  .drag-instructions {
+    font-size: 0.86rem;
+    padding: 9px 10px;
+  }
+
+  .denominator-drop-zone {
+    min-height: 38px;
+    font-size: 0.62rem;
+  }
+
+  .factor-handle {
+    top: -10px;
+    right: -6px;
+    padding: 4px 6px;
+  }
+}
+
+
+/* ===== v1.3.1 drag-combine like terms ===== */
+
+.tile.drop-combine-target {
+  border-color: rgba(39, 103, 73, 0.9);
+  background: rgba(39, 103, 73, 0.08);
+  box-shadow:
+    0 0 0 5px rgba(39, 103, 73, 0.16),
+    0 12px 22px rgba(39, 103, 73, 0.12);
+  transform: translateY(-2px);
+}
+
+.tile.drag-preview-combine {
+  border-color: rgba(39, 103, 73, 0.9);
+  box-shadow: 0 0 0 5px rgba(39, 103, 73, 0.13);
+}
+
+.tile.drop-combine-target::after {
+  content: "combine";
+  position: absolute;
+  right: 8px;
+  bottom: -10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(39, 103, 73, 0.94);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .tile.drop-combine-target::after {
+    font-size: 0.55rem;
+    bottom: -9px;
+  }
+}
