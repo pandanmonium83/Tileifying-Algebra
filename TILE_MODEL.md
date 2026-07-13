@@ -1001,3 +1001,56 @@ drag one like term onto a matching like term
 Constants combine as rational constants.
 
 Variables combine only when their identity, completion, and multiplicative position match.
+
+
+## v1.3.2 stepwise expansion model
+
+Parenthetical expansion should be visible in stages.
+
+For a tile like:
+
+```txt
+3(x+4)
+```
+
+the intended student-facing process is:
+
+```txt
+3(x+4)
+→ (x+4) + (x+4) + (x+4)
+→ x + 4 + x + 4 + x + 4
+→ 3x + 12
+```
+
+The first expansion stage copies the composite group tile.
+
+The second expansion stage opens each copied group into its internal tiles.
+
+Only after that should combining like terms occur.
+
+
+## v1.3.3 literal equation mode
+
+Literal Mode changes how adjacent letters are interpreted.
+
+Normal Mode:
+
+```txt
+3x
+```
+
+means a variable tile with additive count 3.
+
+Literal Mode:
+
+```txt
+ma
+```
+
+means a product of symbolic factors:
+
+```txt
+m · a
+```
+
+This allows literal-equation solving without changing the core Algebra 1 tile behavior.

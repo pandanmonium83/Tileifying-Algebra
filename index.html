@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tileify v1.3.1 Drag-Combine Like Terms Sandbox</title>
+  <title>Tileify v1.3.3 Literal Equation Mode Sandbox</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,8 +20,8 @@
         <p class="eyebrow">Tileify • Classroom Friendly Version</p>
         <h1>Learn algebra as movement.</h1>
         <p class="subtitle">
-          This version keeps the full Tileify engine, but adds drag-and-snap tile movement so the app feels more like a concrete manipulative.
-          Students can enter an equation, drag tiles across the boundary, or use the allowed transformation buttons right where they are working.
+          This version keeps the full Tileify engine and adds a Literal Mode for equations like F = ma.
+          Students can enter equations like F = ma, then move symbolic factors such as m or a into denominator position.
         </p>
       </div>
     </header>
@@ -54,9 +54,15 @@
         <button id="parseBtn">Start / Reset</button>
       </div>
 
+      <label class="literal-mode-toggle">
+        <input id="literalModeToggle" type="checkbox" />
+        <span><strong>Literal Mode</strong> for formulas like <code>F = ma</code> where adjacent letters are multiplied factors.</span>
+      </label>
+
       <div class="examples-wrap">
         <p class="examples-title">Try an example:</p>
         <div class="examples">
+          <button class="example" data-expression="F = ma">F = ma</button>
           <button class="example" data-expression="3x + 5 = 20">3x + 5 = 20</button>
           <button class="example" data-expression="4(x + 2) = 20">4(x + 2) = 20</button>
           <button class="example" data-expression="3/x = 9">3/x = 9</button>

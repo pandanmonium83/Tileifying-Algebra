@@ -1,5 +1,5 @@
 /*
-  Tileify v1.3.1 Drag-Combine Like Terms Sandbox
+  Tileify v1.3.3 Literal Equation Mode Sandbox
 
   New/updated transformations:
   - Move an additive tile across an equation/inequality boundary.
@@ -59,6 +59,7 @@ const addBothInput = document.getElementById("addBothInput");
 const addBothBtn = document.getElementById("addBothBtn");
 const powerBothInput = document.getElementById("powerBothInput");
 const powerBothBtn = document.getElementById("powerBothBtn");
+const literalModeToggle = document.getElementById("literalModeToggle");
 const tileView = document.getElementById("tileView");
 const debugOutput = document.getElementById("debugOutput");
 const transformations = document.getElementById("transformations");
@@ -68,6 +69,7 @@ const historyList = document.getElementById("historyList");
 let currentModel = null;
 let history = [];
 let showHiddenOnes = false;
+let literalMode = false;
 let currentBranches = [];
 let selectedTileIds = new Set();
 let suppressNextTileClick = false;
@@ -83,7 +85,8 @@ let dragState = {
   startY: 0,
   ghost: null,
   lastZone: null,
-  originalCharge: null
+  originalCharge: null,
+  literalFactorIndex: null
 };
 
 const SUPERSCRIPT_MAP = {
@@ -390,6 +393,214 @@ function parseFactorBody(body, forcedMultiplicativePosition = "numerator") {
   };
 }
 
+
+function isLiteralModeProductToken(token) {
+  return literalMode &&
+    /^[A-Za-z]{2,}$/.test(token) &&
+    !token.includes("^");
+}
+
+function makeLiteralProductTile({ side, index, raw, factors, additiveCharge = "+", additiveCount = 1 }) {
+  const factorObjects = factors.map((factor, factorIndex) => ({
+    id: `${side}-literal-factor-${index}-${factorIndex}`,
+    kind: "literalFactor",
+    raw: factor,
+    display: factor,
+    identity: factor,
+    additiveCharge: "+",
+    additiveCount: 1,
+    multiplicativeCompletion: { numerator: 1, denominator: 1 },
+    multiplicativePosition: "numerator",
+    side,
+    parentId: null
+  }));
+
+  return withComputedFlags({
+    id: `${side}-literal-product-${index}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    raw,
+    display: factors.join("·"),
+    kind: "literalProduct",
+    identity: factors.join("*"),
+    additiveCharge,
+    additiveCount,
+    multiplicativeCompletion: { numerator: 1, denominator: 1 },
+    multiplicativePosition: "numerator",
+    side,
+    parentId: null,
+    factors: factorObjects,
+    children: factorObjects,
+    structureType: "literalProduct",
+    notes: [
+      "Literal Mode treats adjacent letters as multiplied symbolic factors."
+    ]
+  });
+}
+
+function getLiteralFactorMoveCandidates(model) {
+  if (!model || !model.boundary || !literalMode) return [];
+
+  const candidates = [];
+
+  for (const side of ["left", "right"]) {
+    const tiles = model.sides[side];
+    if (!tiles || tiles.length !== 1) continue;
+
+    const tile = tiles[0];
+    if (tile.kind !== "literalProduct" || !tile.factors || tile.factors.length < 2) continue;
+    if (tile.additiveCharge !== "+" || tile.additiveCount !== 1) continue;
+
+    tile.factors.forEach((factor, factorIndex) => {
+      candidates.push({ tile, factor, factorIndex, side });
+    });
+  }
+
+  return candidates;
+}
+
+function makeLiteralProductFromFactors({ side, sourceTile, factorsToKeep }) {
+  const sign = sourceTile.additiveCharge === "-" ? -1 : 1;
+
+  if (factorsToKeep.length === 0) {
+    return makeConstantTile({ side, index: 0, signedAdditiveCount: sign });
+  }
+
+  if (factorsToKeep.length === 1) {
+    return makeVariableTile({
+      side,
+      index: 0,
+      identity: factorsToKeep[0].identity || factorsToKeep[0].raw,
+      multiplicativeCompletion: { numerator: 1, denominator: 1 },
+      multiplicativePosition: "numerator",
+      signedAdditiveCount: sign
+    });
+  }
+
+  return makeLiteralProductTile({
+    side,
+    index: 0,
+    raw: factorsToKeep.map(f => f.raw || f.display).join(""),
+    factors: factorsToKeep.map(f => f.raw || f.display),
+    additiveCharge: sourceTile.additiveCharge,
+    additiveCount: sourceTile.additiveCount || 1
+  });
+}
+
+function simpleTileDisplay(tile) {
+  if (!tile) return "";
+  if (tile.kind === "literalProduct") return (tile.additiveCharge === "-" ? "-" : "") + tile.factors.map(f => f.display || f.raw).join("·");
+  if (tile.kind === "fraction") return tile.display || tile.raw;
+  return tileLabel(tile).replace(/^\+/, "");
+}
+
+function makeFractionTileFromSymbolicDenominator({ side, numeratorTiles, denominatorFactor, fractionCharge = "+" }) {
+  const numeratorLabel = numeratorTiles.map(simpleTileDisplay).join(" + ") || "1";
+
+  const numerator = {
+    kind: "symbolicNumerator",
+    raw: numeratorLabel,
+    display: numeratorLabel,
+    identity: numeratorLabel,
+    additiveCharge: "+",
+    additiveCount: 1,
+    multiplicativeCompletion: { numerator: 1, denominator: 1 },
+    multiplicativePosition: "numerator"
+  };
+
+  const denominator = {
+    kind: "symbolicDenominator",
+    raw: denominatorFactor.raw || denominatorFactor.display,
+    display: denominatorFactor.display || denominatorFactor.raw,
+    identity: denominatorFactor.identity || denominatorFactor.raw,
+    additiveCharge: "+",
+    additiveCount: 1,
+    multiplicativeCompletion: { numerator: 1, denominator: 1 },
+    multiplicativePosition: "denominator"
+  };
+
+  return withComputedFlags({
+    id: `${side}-literal-fraction-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    raw: `${numerator.display}/${denominator.display}`,
+    display: `${numerator.display}/${denominator.display}`,
+    kind: "fraction",
+    identity: "fraction",
+    additiveCharge: fractionCharge,
+    additiveCount: 1,
+    multiplicativeCompletion: { numerator: 1, denominator: 1 },
+    multiplicativePosition: "numerator",
+    side,
+    parentId: null,
+    children: [
+      { ...numerator, relationshipToParent: "numerator" },
+      { ...denominator, relationshipToParent: "denominator" }
+    ],
+    numerator,
+    denominator,
+    structureType: "fraction",
+    notes: [
+      "Created in Literal Mode by moving a symbolic factor into denominator position."
+    ]
+  });
+}
+
+function moveLiteralFactorAcross(tileId, factorIndex) {
+  if (!currentModel || !currentModel.boundary) {
+    setMessage("Literal factor movement needs an equation boundary.", "warn");
+    return;
+  }
+
+  const location = findTileLocation(tileId);
+  if (!location || location.tile.kind !== "literalProduct") {
+    setMessage("Could not find that literal product tile.", "warn");
+    return;
+  }
+
+  const sourceTile = location.tile;
+  const factor = sourceTile.factors[factorIndex];
+
+  if (!factor) {
+    setMessage("Could not find that symbolic factor.", "warn");
+    return;
+  }
+
+  const sourceSide = location.side;
+  const targetSide = oppositeSide(sourceSide);
+
+  const remainingFactors = sourceTile.factors.filter((_, index) => index !== factorIndex);
+  const updatedSourceTile = makeLiteralProductFromFactors({
+    side: sourceSide,
+    sourceTile,
+    factorsToKeep: remainingFactors
+  });
+
+  const targetTiles = [...currentModel.sides[targetSide]];
+  const newTargetFraction = makeFractionTileFromSymbolicDenominator({
+    side: targetSide,
+    numeratorTiles: targetTiles,
+    denominatorFactor: factor,
+    fractionCharge: "+"
+  });
+
+  const nextSides = {
+    left: [...currentModel.sides.left],
+    right: currentModel.boundary ? [...currentModel.sides.right] : []
+  };
+
+  nextSides[sourceSide] = [updatedSourceTile];
+  nextSides[targetSide] = [newTargetFraction];
+
+  currentModel = cleanupModelZeros({
+    ...currentModel,
+    sides: nextSides,
+    lastTransformation: "Literal Factor Boundary Crossing"
+  });
+
+  clearSelection();
+  history.push(`Moved symbolic factor ${factor.display || factor.raw} into denominator position on the ${targetSide} side.`);
+  setMessage(`Moved ${factor.display || factor.raw} into denominator position.`, "good");
+  renderModel(currentModel);
+}
+
+
 function parseTerm(termText, side, index) {
   const original = termText;
   let additiveCharge = "+";
@@ -402,6 +613,17 @@ function parseTerm(termText, side, index) {
   }
 
   if (body === "") throw new Error(`Empty term on ${side} side.`);
+
+  if (isLiteralModeProductToken(body)) {
+    return makeLiteralProductTile({
+      side,
+      index,
+      raw: original,
+      factors: body.split(""),
+      additiveCharge,
+      additiveCount: 1
+    });
+  }
 
   const fractionParts = splitTopLevelSlash(body);
   if (fractionParts) {
@@ -1217,47 +1439,82 @@ function cloneExpandedChild(child, side, copyIndex, childIndex, outerCharge) {
 }
 
 function expandCompositeTile(tile) {
-  if (!hasExpandableComposite(tile)) return [tile];
-
-  const expanded = [];
-  const repeatCount = Math.max(1, tile.additiveCount || 1);
-
-  for (let copy = 0; copy < repeatCount; copy++) {
-    const children = parseSide(tile.childrenRaw, tile.side);
-    children.forEach((child, childIndex) => {
-      expanded.push(cloneExpandedChild(child, tile.side, copy, childIndex, tile.additiveCharge));
-    });
+  if (!hasExpandableComposite(tile)) {
+    return { tiles: [tile], stage: "none" };
   }
 
-  return expanded;
+  const repeatCount = Math.max(1, tile.additiveCount || 1);
+
+  // Stage 1: if the parenthetical tile still has an outside additive count,
+  // show that the entire group tile is being copied.
+  if (repeatCount > 1) {
+    const copiedGroups = [];
+
+    for (let copy = 0; copy < repeatCount; copy++) {
+      copiedGroups.push(withComputedFlags({
+        ...structuredClone(tile),
+        id: `${tile.side}-group-copy-${copy}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        side: tile.side,
+        additiveCount: 1,
+        parentId: null
+      }));
+    }
+
+    return { tiles: copiedGroups, stage: "copied-groups" };
+  }
+
+  // Stage 2: once the tile is a single group, open it into the inside tiles.
+  const expanded = [];
+  const children = parseSide(tile.childrenRaw, tile.side);
+  children.forEach((child, childIndex) => {
+    expanded.push(cloneExpandedChild(child, tile.side, 0, childIndex, tile.additiveCharge));
+  });
+
+  return { tiles: expanded, stage: "opened-group" };
 }
 
 function expandSide(tiles) {
   let changed = false;
+  let copiedGroups = false;
+  let openedGroups = false;
   const result = [];
 
   for (const tile of tiles) {
     if (hasExpandableComposite(tile)) {
       changed = true;
-      result.push(...expandCompositeTile(tile));
+      const expansion = expandCompositeTile(tile);
+      result.push(...expansion.tiles);
+
+      if (expansion.stage === "copied-groups") copiedGroups = true;
+      if (expansion.stage === "opened-group") openedGroups = true;
     } else {
       result.push(tile);
     }
   }
 
-  return { tiles: cleanupZeroPlaceholders(result), changed };
+  return {
+    tiles: cleanupZeroPlaceholders(result),
+    changed,
+    copiedGroups,
+    openedGroups
+  };
 }
 
 function expandCompositeTiles() {
   if (!currentModel) return;
 
   const left = expandSide(currentModel.sides.left);
-  const right = currentModel.boundary ? expandSide(currentModel.sides.right) : { tiles: [], changed: false };
+  const right = currentModel.boundary
+    ? expandSide(currentModel.sides.right)
+    : { tiles: [], changed: false, copiedGroups: false, openedGroups: false };
 
   if (!left.changed && !right.changed) {
     setMessage("No parenthetical structure is ready to expand.", "warn");
     return;
   }
+
+  const copiedGroups = left.copiedGroups || right.copiedGroups;
+  const openedGroups = left.openedGroups || right.openedGroups;
 
   currentModel = cleanupModelZeros({
     ...currentModel,
@@ -1265,11 +1522,22 @@ function expandCompositeTiles() {
       left: left.tiles,
       right: currentModel.boundary ? right.tiles : []
     },
-    lastTransformation: "Expand Parentheses"
+    lastTransformation: copiedGroups
+      ? "Expand Parentheses Into Repeated Group Tiles"
+      : "Open Parentheses Into Internal Tiles"
   });
 
-  history.push("Expanded/opened parenthetical structure into internal tiles.");
-  setMessage("Expanded/opened parenthetical structure. Now combine like terms if possible.", "good");
+  if (copiedGroups) {
+    history.push("Expanded by copying the parenthetical-expression tile into repeated group tiles.");
+    setMessage("The parenthetical tile was copied the required number of times. Expand again to open each group.", "good");
+  } else if (openedGroups) {
+    history.push("Opened repeated parenthetical group tiles into their inside tiles.");
+    setMessage("The copied group tiles opened into inside tiles. Now combine like terms if possible.", "good");
+  } else {
+    history.push("Expanded/opened parenthetical structure.");
+    setMessage("Expanded/opened parenthetical structure. Now combine like terms if possible.", "good");
+  }
+
   renderModel(currentModel);
 }
 
@@ -1963,6 +2231,13 @@ function tileReadableLabel(tile) {
 }
 
 function tileLabel(tile) {
+  if (tile.kind === "literalProduct") {
+    const sign = tile.additiveCharge === "-" ? "-" : "+";
+    const count = tile.additiveCount && tile.additiveCount !== 1 ? tile.additiveCount : "";
+    const factors = tile.factors ? tile.factors.map(f => f.display || f.raw).join("·") : tile.display;
+    return `${sign}${count}${factors}`;
+  }
+
   const charge = tile.additiveCharge === "-" ? "-" : "+";
 
   if (tile.kind === "constant") return `${charge}${tile.additiveCount}`;
@@ -2190,6 +2465,13 @@ function makeWholeTileGhost(tileEl) {
 function makeFactorGhost(tile) {
   const ghost = document.createElement("div");
   ghost.className = "drag-ghost factor-ghost";
+
+  if (dragState.dragKind === "literalFactor" && tile.kind === "literalProduct" && tile.factors) {
+    const factor = tile.factors[dragState.literalFactorIndex || 0];
+    ghost.innerHTML = `<strong>${factor.display || factor.raw}</strong><span>to denominator</span>`;
+    return ghost;
+  }
+
   ghost.innerHTML = `<strong>${outsideFactorLabelForTile(tile)}</strong><span>to denominator</span>`;
   return ghost;
 }
@@ -2404,7 +2686,14 @@ function updateDragZone(x, y) {
 
   if (zone.mode === "denominator") {
     const location = findTileLocation(dragState.tileId);
-    if (location && tileCanDragOutsideFactor(location.tile)) {
+    const canDropFactor =
+      location &&
+      (
+        tileCanDragOutsideFactor(location.tile) ||
+        (dragState.dragKind === "literalFactor" && location.tile.kind === "literalProduct")
+      );
+
+    if (canDropFactor) {
       const zoneEl = document.querySelector(`.denominator-drop-zone[data-side="${zone.side}"]`);
       if (zoneEl) zoneEl.classList.add("active");
       setTileDragPreview(dragState.tileId, "denominator");
@@ -2437,7 +2726,8 @@ function resetDragState() {
     startY: 0,
     ghost: null,
     lastZone: null,
-    originalCharge: null
+    originalCharge: null,
+    literalFactorIndex: null
   };
 }
 
@@ -2584,6 +2874,7 @@ function endTileDrag(event) {
   const tileId = dragState.tileId;
   const startSide = dragState.side;
   const dragKind = dragState.dragKind;
+  const literalFactorIndex = dragState.literalFactorIndex || 0;
   const zone = dragState.lastZone || getDragZoneFromPoint(event.clientX, event.clientY);
 
   document.querySelectorAll(".tile.dragging-source").forEach(el => el.classList.remove("dragging-source"));
@@ -2610,6 +2901,11 @@ function endTileDrag(event) {
   }
 
   if (zone.mode === "denominator") {
+    if (dragKind === "literalFactor") {
+      moveLiteralFactorAcross(tileId, literalFactorIndex);
+      return;
+    }
+
     safeMoveOutsideFactorByDrag(tileId);
     return;
   }
@@ -2829,6 +3125,30 @@ function renderTile(tile) {
       beginPendingTileDrag(event, tile, "factor");
     });
     div.appendChild(factorHandle);
+  }
+
+  if (tile.kind === "literalProduct" && tile.factors && tile.factors.length > 1 && literalMode) {
+    const literalHandleRow = document.createElement("div");
+    literalHandleRow.className = "literal-factor-handles";
+
+    tile.factors.forEach((factor, factorIndex) => {
+      const handle = document.createElement("button");
+      handle.type = "button";
+      handle.className = "literal-factor-handle";
+      handle.textContent = factor.display || factor.raw;
+      handle.title = "Drag this symbolic factor to the opposite denominator zone.";
+      handle.addEventListener("click", event => {
+        event.stopPropagation();
+      });
+      handle.addEventListener("pointerdown", event => {
+        event.stopPropagation();
+        beginPendingTileDrag(event, tile, "literalFactor");
+        dragState.literalFactorIndex = factorIndex;
+      });
+      literalHandleRow.appendChild(handle);
+    });
+
+    div.appendChild(literalHandleRow);
   }
 
   return div;
@@ -4651,6 +4971,17 @@ function detectTransformations(model) {
       : "Requires an isolated variable or parenthetical composite tile with additive count greater than 1."
   });
 
+  const literalCandidates = getLiteralFactorMoveCandidates(model);
+
+  literalCandidates.forEach(({ tile, factor, factorIndex, side }) => {
+    const btn = document.createElement("button");
+    btn.className = "move-action";
+    const target = oppositeSide(side);
+    btn.innerHTML = `Move symbolic factor <strong>${factor.display || factor.raw}</strong> into denominator on ${target}`;
+    btn.addEventListener("click", () => moveLiteralFactorAcross(tile.id, factorIndex));
+    multiplicativeButtons.appendChild(btn);
+  });
+
   const denominatorCandidates = getDenominatorCrossingCandidates(model);
   const hasBlockedVariableDenominatorInequality =
     isInequalityBoundary(model.boundary) &&
@@ -4883,6 +5214,17 @@ function renderMultiplicativeButtons(model) {
     const signedFactor = (tile.additiveCharge === "-" ? "-" : "") + tile.additiveCount;
     btn.innerHTML = `Move outside factor <strong>${signedFactor}</strong> from ${tileReadableLabel(tile)} into denominator on ${target}`;
     btn.addEventListener("click", () => moveMultiplicativeFactorAcross(tile.id));
+    multiplicativeButtons.appendChild(btn);
+  });
+
+  const literalCandidates = getLiteralFactorMoveCandidates(model);
+
+  literalCandidates.forEach(({ tile, factor, factorIndex, side }) => {
+    const btn = document.createElement("button");
+    btn.className = "move-action";
+    const target = oppositeSide(side);
+    btn.innerHTML = `Move symbolic factor <strong>${factor.display || factor.raw}</strong> into denominator on ${target}`;
+    btn.addEventListener("click", () => moveLiteralFactorAcross(tile.id, factorIndex));
     multiplicativeButtons.appendChild(btn);
   });
 
@@ -5808,6 +6150,12 @@ revealFactorsBtn.addEventListener("click", revealCommonFactors);
 cancelFactorsBtn.addEventListener("click", cancelRevealedFactors);
 addBothBtn.addEventListener("click", addTileToBothSides);
 powerBothBtn.addEventListener("click", raiseBothSidesToPower);
+if (literalModeToggle) {
+  literalModeToggle.addEventListener("change", () => {
+    literalMode = literalModeToggle.checked;
+    parseAndRender();
+  });
+}
 
 input.addEventListener("keydown", event => {
   if (event.key === "Enter") parseAndRender();

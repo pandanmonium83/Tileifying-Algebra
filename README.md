@@ -1,4 +1,4 @@
-# Tileify v1.3.1 Drag-Combine Like Terms Sandbox
+# Tileify v1.3.3 Literal Equation Mode Sandbox
 
 This build is a more user-friendly presentation of the current Tileify sandbox.
 
@@ -283,3 +283,91 @@ Drag `3` onto `4`:
 ### Button still remains
 
 The regular **Combine Like Terms** button remains available as guided mode.
+
+
+## v1.3.2 patch
+
+### Parentheses expansion now happens in visible stages
+
+Tileify now shows expansion the way the mathematical model is intended to be seen.
+
+Example:
+
+```txt
+3(x+4)
+```
+
+#### Stage 1: copy the parenthetical tile
+
+A first click on **Expand / Open Parentheses** shows repeated copies of the parenthetical-expression tile:
+
+```txt
+(x+4) + (x+4) + (x+4)
+```
+
+#### Stage 2: open the copied group tiles
+
+A second click on **Expand / Open Parentheses** opens the repeated group tiles into inside tiles:
+
+```txt
+x + 4 + x + 4 + x + 4
+```
+
+#### Stage 3: combine like terms
+
+Then students can drag-combine or press **Combine Like Terms** to reach:
+
+```txt
+3x + 12
+```
+
+This makes the distributive idea concrete:
+
+- first the group tile is copied
+- then the parentheses are opened
+- then like terms combine
+
+
+## v1.3.3 patch
+
+### Literal Mode
+
+Literal equations now have their own mode.
+
+Turn on **Literal Mode** before parsing formulas like:
+
+```txt
+F = ma
+```
+
+In Normal Mode, Tileify keeps the existing Algebra 1 behavior.
+
+In Literal Mode, adjacent letters are treated as multiplied symbolic factors:
+
+```txt
+ma → m·a
+```
+
+This means students can move either factor into denominator position:
+
+```txt
+F = m·a
+→ F/a = m
+```
+
+or:
+
+```txt
+F = m·a
+→ F/m = a
+```
+
+### Why this is separate
+
+Literal Mode prevents formula-solving behavior from breaking the regular algebra parser, especially cases like:
+
+```txt
+3x
+```
+
+which should still behave as three x tiles in Normal Mode.
